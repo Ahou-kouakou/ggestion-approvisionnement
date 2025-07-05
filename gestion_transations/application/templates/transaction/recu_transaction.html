@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Reçu de Transaction{% endblock %}
+
+{% block content %}
+<style>
+    .recu-container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        font-family: 'Segoe UI', sans-serif;
+    }
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+    .info {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    .btn-print {
+        display: block;
+        width: 100%;
+        background-color: #3498db;
+        color: white;
+        padding: 10px;
+        margin-top: 20px;
+        text-align: center;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    .btn-print:hover {
+        background-color: #2980b9;
+    }
+
+    @media print {
+        .btn-print {
+            display: none;
+        }
+        header, nav {
+            display: none;
+        }
+    }
+</style>
+
+<div class="recu-container">
+    <h2>Reçu de Transaction</h2>
+    <div class="info"><strong>Référence :</strong> {{ transaction.reference_paiement }}</div>
+    <div class="info"><strong>Montant :</strong> {{ transaction.montant }} FCFA</div>
+    <div class="info"><strong>Date :</strong> {{ transaction.date_transaction|date:"d/m/Y H:i" }}</div>
+    <div class="info"><strong>Compte débité :</strong> 
+        {{ transaction.compte_debite.titulaire.get_full_name }}
+    </div>
+    <div class="info"><strong>Compte crédité :</strong> 
+        {{ transaction.compte_credite.titulaire.get_full_name }}
+    </div>
+    <div class="info"><strong>Statut :</strong> {{ transaction.get_statut_display }}</div>
+
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimer le reçu</button>
+</div>
+{% endblock %}

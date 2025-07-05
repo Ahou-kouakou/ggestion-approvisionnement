@@ -1,0 +1,14 @@
+<!-- core/templates/transaction_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}Nouvelle transaction{% endblock %}
+
+{% block content %}
+<h2>Remplir un bordereau</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Valider</button>
+</form>
+{% endblock %}

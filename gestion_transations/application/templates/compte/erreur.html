@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Erreur{% endblock %}
+
+{% block content %}
+    <h2 style="color: red;">Une erreur est survenue</h2>
+    <p>{{ message }}</p>
+    <a href="{% url 'dashboard' %}">Retour au tableau de bord</a>
+{% endblock %}

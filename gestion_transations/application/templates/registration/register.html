@@ -1,0 +1,236 @@
+{% load static %}
+
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  nav {
+    background-color: #34495e;
+    padding: 10px;
+    text-align: center;
+  }
+
+  nav a {
+    color: white;
+    margin: 0 15px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  nav a:hover {
+    text-decoration: underline;
+  }
+
+  main {
+    padding: 30px;
+  }
+
+  .form-container {
+    max-width: 500px;
+    margin: auto;
+    background-color: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .btn {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+  }
+
+  .btn:hover {
+    background-color: #2980b9;
+  }
+
+  .login-link {
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .messages {
+    list-style: none;
+    padding: 10px;
+    margin: 10px 0;
+  }
+
+  .messages li.success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 5px solid #28a745;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .messages li.error, .messages li.warning {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 5px solid #dc3545;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .form-error {
+    color: #dc3545;
+    font-size: 0.95em;
+    margin-top: 3px;
+    margin-bottom: 8px;
+  }
+
+  .info {
+    background-color: #e9f7ef;
+    color: #155724;
+    padding: 10px;
+    border-left: 5px solid #28a745;
+    margin-bottom: 15px;
+    border-radius: 4px;
+  }
+</style>
+
+<div class="form-container" 
+     data-user-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}" 
+     data-user-type="{% if user.is_authenticated %}{{ user.user_type }}{% else %}none{% endif %}">
+
+  <h2>Créer un compte</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% if user.is_authenticated and user.user_type == "agent" %}
+      <div class="info">ℹ️ Vous êtes connecté en tant qu’<strong>agent</strong>. Vous pouvez inscrire uniquement un <strong>client</strong>.</div>
+    {% elif not user.is_authenticated %}
+      <div class="info">ℹ️ Vous n’êtes pas connecté. Vous pouvez créer un compte <strong>agent</strong> uniquement.</div>
+    {% endif %}
+
+    <div class="form-group">
+      {{ form.first_name.label_tag }} {{ form.first_name }}
+      {% for error in form.first_name.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.last_name.label_tag }} {{ form.last_name }}
+      {% for error in form.last_name.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.email.label_tag }} {{ form.email }}
+      {% for error in form.email.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.telephone.label_tag }} {{ form.telephone }}
+      {% for error in form.telephone.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.user_type.label_tag }} {{ form.user_type }}
+      {% for error in form.user_type.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.password1.label_tag }} {{ form.password1 }}
+      {% for error in form.password1.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.password2.label_tag }} {{ form.password2 }}
+      {% for error in form.password2.errors %}
+        <div class="form-error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="form-error">
+        {% for error in form.non_field_errors %}
+          {{ error }}<br>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <button type="submit" class="btn">S'inscrire</button>
+  </form>
+
+  <p class="login-link">Déjà inscrit ? <a href="{% url 'creer_compte_operateur' %}">CREER UN COMPTE OPERATEUR</a></p>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const userTypeSelect = document.querySelector('select[name="user_type"]');
+    const formContainer = document.querySelector('.form-container');
+    const isAuthenticated = formContainer.getAttribute('data-user-authenticated') === 'true';
+    const userType = formContainer.getAttribute('data-user-type');
+
+    if (isAuthenticated) {
+      if (userType === 'agent') {
+        // Agent connecté → ne peut choisir que client
+        Array.from(userTypeSelect.options).forEach(option => {
+          if (option.value !== 'client') {
+            option.disabled = true;
+          }
+        });
+      } else {
+        userTypeSelect.disabled = true;
+      }
+    } else {
+      // Utilisateur non connecté → ne peut créer qu’un agent
+      Array.from(userTypeSelect.options).forEach(option => {
+        if (option.value === 'client') {
+          option.disabled = true;
+        }
+      });
+    }
+  });
+</script>
+  });
+</script>

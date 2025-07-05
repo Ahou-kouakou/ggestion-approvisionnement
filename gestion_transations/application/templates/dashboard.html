@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .card h3 {
+        margin: 0;
+        font-size: 24px;
+        color: #2c3e50;
+    }
+
+    .filter-buttons {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .filter-buttons a {
+        margin: 0 10px;
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .filter-buttons a:hover {
+        background-color: #2980b9;
+    }
+
+    table {
+        width: 100%;
+        background-color: white;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th, td {
+        padding: 12px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f2f2f2;
+    }
+
+    .pagination {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .pagination a {
+        margin: 0 5px;
+        text-decoration: none;
+        padding: 8px 12px;
+        background-color: #3498db;
+        color: white;
+        border-radius: 4px;
+    }
+
+    .pagination span {
+        margin: 0 10px;
+        font-weight: bold;
+    }
+
+    .search-form {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .search-form input[type="text"] {
+        flex: 1 1 300px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .search-form button {
+        padding: 10px 20px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .search-form button:hover {
+        background-color: #2980b9;
+    }
+
+</style>
+
+<h2>Tableau de bord des transactions</h2>
+
+<div class="dashboard-container">
+    <div class="card">
+        <h3>{{ total_transactions }}</h3>
+        <p>Total des transactions</p>
+    </div>
+    <div class="card">
+        <h3>{{ total_transmises }}</h3>
+        <p>Transactions transmises</p>
+    </div>
+    <div class="card">
+        <h3>{{ total_echouees }}</h3>
+        <p>Transactions échouées</p>
+    </div>
+</div>
+
+<div class="filter-buttons">
+    <a href="?filtre=toutes">Toutes</a>
+    <a href="?filtre=transmises">Transmises</a>
+    <a href="?filtre=echouees">Échouées</a>
+</div>
+
+{% if filtre %}
+<h3>Liste des transactions - {{ filtre|title }}</h3>
+<form method="get" class="search-form">
+    <input type="hidden" name="filtre" value="{{ filtre }}">
+    <input type="text" name="recherche" id="filtreRecherche" placeholder="🔍 Rechercher par nom, référence..." value="{{ recherche }}">
+    <button type="submit">Rechercher</button>
+</form>
+
+<table>
+    <tr>
+        <th>Compte débité</th>
+        <th>Solde initial débité</th>
+        <th>Solde final débité</th>
+        <th>Compte crédité</th>
+        <th>Solde initial crédité</th>
+        <th>Solde final crédité</th>
+        <th>Montant</th>
+        <th>Référence</th>
+        <th>Statut</th>
+        <th>Date</th>
+        <th>Action</th>
+    </tr>
+    <tbody id="liste-transactions">
+        {% for transaction in page_obj %}
+        <tr>
+            <!-- Compte débité -->
+            <td>
+                {% if transaction.compte_debite.titulaire %}
+                    {{ transaction.compte_debite.titulaire.get_full_name }}
+                {% else %}
+                    {{ transaction.compte_debite.operateur }}
+                {% endif %}
+            </td>
+
+            <!-- Solde initial débité -->
+            <td>
+                {% if transaction.compte_debite %}
+                    {{ transaction.compte_debite.solde|add:transaction.montant|floatformat:0 }}
+                {% else %}-{% endif %}
+            </td>
+
+            <!-- Solde final débité -->
+            <td>
+                {{ transaction.compte_debite.solde|floatformat:0 }}
+            </td>
+
+            <!-- Compte crédité -->
+            <td>
+                {% if transaction.compte_credite.titulaire %}
+                    {{ transaction.compte_credite.titulaire.get_full_name }}
+                {% else %}
+                    {{ transaction.compte_credite.operateur }}
+                {% endif %}
+            </td>
+
+            <!-- Solde initial crédité -->
+            <td>
+                {% if transaction.compte_credite %}
+                    {{ transaction.compte_credite.solde|add:"-"|add:transaction.montant|floatformat:0 }}
+                {% else %}-{% endif %}
+            </td>
+
+            <!-- Solde final crédité -->
+            <td>
+                {{ transaction.compte_credite.solde|floatformat:0 }}
+            </td>
+
+            <!-- Montant, Réf, Statut, Date -->
+            <td>{{ transaction.montant }}</td>
+            <td>{{ transaction.reference_paiement }}</td>
+            <td>{{ transaction.get_statut_display }}</td>
+            <td>{{ transaction.date_transaction|date:"d/m/Y H:i" }}</td>
+
+            <!-- Action -->
+            <td>
+                    {% if transaction.statut == 'echec' or transaction.statut == 'attente' %}
+                    <form method="post" action="{% url 'retransmettre_transaction' transaction.id %}" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment retransmettre cette transaction ?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">Retransmettre</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'recu_transaction' transaction.id %}" class="btn btn-info">Voir</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="11" style="text-align: center;">Aucune transaction trouvée.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?filtre={{ filtre }}&page={{ page_obj.previous_page_number }}">⬅ Précédent</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?filtre={{ filtre }}&page={{ page_obj.next_page_number }}">Suivant ➡</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+

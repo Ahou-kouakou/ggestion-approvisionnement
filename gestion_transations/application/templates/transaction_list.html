@@ -1,0 +1,28 @@
+<!-- core/templates/transaction_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Liste des transactions{% endblock %}
+
+{% block content %}
+<h2>Transactions enregistrées</h2>
+<table border="1">
+    <tr>
+        <th>Référence</th>
+        <th>Montant</th>
+        <th>Statut</th>
+        <th>Date</th>
+        <th>Action</th>
+    </tr>
+    {% for transaction in transactions %}
+    <tr>
+        <td>{{ transaction.reference_paiement }}</td>
+        <td>{{ transaction.montant }}</td>
+        <td>{{ transaction.statut }}</td>
+        <td>{{ transaction.date_transaction }}</td>
+        <td><a href="{% url 'transaction_detail' transaction.id %}">Voir</a></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">Aucune transaction trouvée.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

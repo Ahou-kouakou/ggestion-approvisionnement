@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Recharger un compte client{% endblock %}
+
+{% block content %}
+<style>
+    .rechargement-form {
+        background-color: #ffffff;
+        padding: 30px;
+        max-width: 500px;
+        margin: 40px auto;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .rechargement-form h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+
+    .rechargement-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #34495e;
+    }
+
+    .rechargement-form input,
+    .rechargement-form select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .rechargement-form button {
+        width: 100%;
+        padding: 12px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .rechargement-form button:hover {
+        background-color: #2980b9;
+    }
+</style>
+
+<div class="rechargement-form">
+    <h2>💳 Rechargement de compte</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Recharger</button>
+    </form>
+</div>
+{% endblock %}

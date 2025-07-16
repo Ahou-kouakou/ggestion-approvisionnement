@@ -1,12 +1,35 @@
 import time
 import os
 import csv
-import requests # type: ignore
+import requests  # type: ignore
 from django.utils import timezone
 from django.conf import settings
+from django.core.mail import send_mail
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from application.models import Transaction
+
+def envoyer_mail_credit(transaction):
+    try:
+        compte_dest = transaction.compte_credite
+        if compte_dest.operateur and compte_dest.operateur.utilisateur:
+            destinataire = compte_dest.operateur.utilisateur.email
+            send_mail(
+                subject="✅ Crédit sur votre compte opérateur",
+                message=(
+                    f"Bonjour,\n\n"
+                    f"Votre compte a été crédité d’un montant de {transaction.montant} FCFA.\n"
+                    f"Référence : {transaction.reference_paiement}\n"
+                    f"Date : {transaction.date_transaction.strftime('%d/%m/%Y à %H:%M')}\n\n"
+                    f"Cordialement,\nVotre banque."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[destinataire],
+                fail_silently=False
+            )
+            print(f"[EMAIL] Mail envoyé à {destinataire}")
+    except Exception as e:
+        print(f"[EMAIL-ERREUR] {e}")
 
 class FichierCBSEventHandler(FileSystemEventHandler):
     def on_created(self, event):
@@ -39,6 +62,10 @@ class FichierCBSEventHandler(FileSystemEventHandler):
                         tx.statut = statut
                         tx.date_transmission = timezone.now()
                         tx.save()
+
+                        # ✅ Envoi du mail seulement si TRANSMISE
+                        if statut == "transmise":
+                            envoyer_mail_credit(tx)
 
                     print(f"[API] {reference} → {statut.upper()}")
         except Exception as e:

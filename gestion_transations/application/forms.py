@@ -106,7 +106,29 @@ class CompteOperateurForm(forms.ModelForm):
         return compte
 
 
+# from django import forms
+# from .models import Compte, CustomUser
 
+# class TransactionForm(forms.Form):
+#     compte_debite = forms.ModelChoiceField(
+#         queryset=Compte.objects.filter(type='banque'),
+#         label="Compte bancaire à débiter"
+#     )
+
+#     client_operateur = forms.ModelChoiceField(
+#         queryset=CustomUser.objects.filter(user_type='client_operateur'),
+#         label="Client opérateur à créditer",
+#         to_field_name='id'
+#     )
+
+#     montant = forms.DecimalField(
+#         max_digits=15, decimal_places=2, min_value=0.01, label="Montant"
+#     )
+
+#     # ✅ pour afficher le nom complet du client opérateur
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.fields['client_operateur'].label_from_instance = lambda obj: f"{obj.last_name} {obj.first_name}"
 
 from django import forms
 from .models import Transaction, Compte
@@ -124,10 +146,30 @@ class TransactionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Limiter la sélection aux comptes bancaires (type = banque)
-        self.fields['compte_debite'].queryset = Compte.objects.filter(type='banque')
+        # ✅ Limiter aux comptes bancaires avec un titulaire
+        self.fields['compte_debite'].queryset = Compte.objects.filter(
+            type='banque',
+            titulaire__isnull=False
+        )
         self.fields['compte_debite'].label_from_instance = lambda obj: f"{obj.numero_compte} – {obj.titulaire.get_full_name()}"
 
-        # Limiter aux comptes opérateur (type = operateur)
-        self.fields['compte_credite'].queryset = Compte.objects.filter(type='operateur')
-        self.fields['compte_credite'].label_from_instance = lambda obj: f"{obj.numero_compte} – {obj.operateur.nom}"
+        # ✅ Limiter aux comptes opérateurs dont le titulaire est un client opérateur
+        self.fields['compte_credite'].queryset = Compte.objects.filter(
+            type='operateur',
+            titulaire__user_type='client_operateur'
+        )
+
+        self.fields['compte_credite'].label_from_instance = lambda obj: (
+            f"{obj.numero_compte} – {obj.titulaire.get_full_name()}"
+            if obj.titulaire else obj.numero_compte
+        )
+
+from django import forms
+from .models import CustomUser, Operateur
+
+class ClientOperateurForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput, label="Mot de passe du client")
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'email', 'telephone', 'password']

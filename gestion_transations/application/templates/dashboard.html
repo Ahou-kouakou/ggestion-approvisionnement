@@ -3,244 +3,1008 @@
 {% block title %}Tableau de bord{% endblock %}
 
 {% block content %}
-<style>
-    .dashboard-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-bottom: 30px;
-    }
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
 
-    .card {
-        background-color: #ffffff;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        text-align: center;
-        font-size: 18px;
-    }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
 
-    .card h3 {
-        margin: 0;
-        font-size: 24px;
-        color: #2c3e50;
-    }
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
 
-    .filter-buttons {
-        margin-bottom: 20px;
-        text-align: center;
-    }
+        .card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .filter-buttons a {
-        margin: 0 10px;
-        padding: 10px 20px;
-        background-color: #3498db;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-    }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transition: transform 0.5s ease;
+            transform: scale(0);
+        }
 
-    .filter-buttons a:hover {
-        background-color: #2980b9;
-    }
+        .card:hover::before {
+            transform: scale(1);
+        }
 
-    table {
-        width: 100%;
-        background-color: white;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
 
-    th, td {
-        padding: 12px;
-        border: 1px solid #ccc;
-        text-align: left;
-    }
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: bold;
+            animation: countUp 2s ease-out;
+        }
 
-    th {
-        background-color: #f2f2f2;
-    }
+        .card p {
+            margin: 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
 
-    .pagination {
-        margin-top: 20px;
-        text-align: center;
-    }
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    .pagination a {
-        margin: 0 5px;
-        text-decoration: none;
-        padding: 8px 12px;
-        background-color: #3498db;
-        color: white;
-        border-radius: 4px;
-    }
+        .filter-buttons {
+            margin-bottom: 20px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-    .pagination span {
-        margin: 0 10px;
-        font-weight: bold;
-    }
+        .filter-buttons button {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
 
-    .search-form {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
+        .filter-buttons button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
 
-    .search-form input[type="text"] {
-        flex: 1 1 300px;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 16px;
-    }
+        .filter-buttons button.active {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 62, 80, 0.4);
+        }
 
-    .search-form button {
-        padding: 10px 20px;
-        background-color: #3498db;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-    }
+        .search-form {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-    .search-form button:hover {
-        background-color: #2980b9;
-    }
+        .search-form input[type="text"] {
+            flex: 1 1 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
 
-</style>
+        .search-form input[type="text"]:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
 
-<h2>Tableau de bord des transactions</h2>
+        .search-form button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
 
-<div class="dashboard-container">
-    <div class="card">
-        <h3>{{ total_transactions }}</h3>
-        <p>Total des transactions</p>
+        .search-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            background-color: white;
+            border-collapse: collapse;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tr {
+            transition: all 0.3s ease;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-transmis {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+
+        .status-echec {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .status-attente {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+
+        /* Modal pour le reçu */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 0;
+            border: none;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.8em;
+            color: white;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .receipt {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 0 auto;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .receipt-header h3 {
+            color: #667eea;
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .receipt-header p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .receipt-details {
+            margin-bottom: 20px;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .receipt-row:last-child {
+            border-bottom: none;
+        }
+
+        .receipt-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .receipt-value {
+            color: #666;
+            text-align: right;
+        }
+
+        .receipt-amount {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .receipt-amount .amount {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #667eea;
+        }
+
+        .receipt-footer button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .receipt-footer button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+            }
+
+            .receipt {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Tableau de bord des transactions</h2>
+
+        <div class="dashboard-container">
+            <div class="card" onclick="filterTransactions('toutes')">
+                <h3 id="totalTransactions">0</h3>
+                <p>Total des transactions</p>
+            </div>
+            <div class="card" onclick="filterTransactions('transmises')">
+                <h3 id="totalTransmises">0</h3>
+                <p>Transactions transmises</p>
+            </div>
+            <div class="card" onclick="filterTransactions('echouees')">
+                <h3 id="totalEchouees">0</h3>
+                <p>Transactions échouées</p>
+            </div>
+            <div class="card" onclick="filterTransactions('attente')">
+                <h3 id="totalAttente">0</h3>
+                <p>En attente</p>
+            </div>
+        </div>
+
+        <div class="filter-buttons">
+            <button onclick="filterTransactions('toutes')" class="active" id="btn-toutes">Toutes</button>
+            <button onclick="filterTransactions('transmises')" id="btn-transmises">Transmises</button>
+            <button onclick="filterTransactions('echouees')" id="btn-echouees">Échouées</button>
+            <button onclick="filterTransactions('attente')" id="btn-attente">En attente</button>
+        </div>
+
+        <div class="search-form">
+            <input type="text" id="searchInput" placeholder="🔍 Rechercher par nom, référence..." onkeyup="searchTransactions()">
+            <button onclick="searchTransactions()">Rechercher</button>
+        </div>
+
+        <div id="transactionList" class="fade-in">
+            <div class="table-container">
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th>Compte débité</th>
+                            <th>Solde initial</th>
+                            <th>Solde final</th>
+                            <th>Compte crédité</th>
+                            <th>Solde initial</th>
+                            <th>Solde final</th>
+                            <th>Montant</th>
+                            <th>Référence</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        <!-- Les données seront chargées dynamiquement -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination">
+            <button onclick="changePage(-1)" id="prevBtn">⬅ Précédent</button>
+            <span id="pageInfo">Page 1 sur 1</span>
+            <button onclick="changePage(1)" id="nextBtn">Suivant ➡</button>
+        </div>
     </div>
-    <div class="card">
-        <h3>{{ total_transmises }}</h3>
-        <p>Transactions transmises</p>
+
+    <!-- Modal pour le reçu -->
+    <div id="receiptModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Reçu de transaction</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="receipt" id="receiptContent">
+                    <!-- Le contenu du reçu sera généré ici -->
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card">
-        <h3>{{ total_echouees }}</h3>
-        <p>Transactions échouées</p>
-    </div>
-</div>
 
-<div class="filter-buttons">
-    <a href="?filtre=toutes">Toutes</a>
-    <a href="?filtre=transmises">Transmises</a>
-    <a href="?filtre=echouees">Échouées</a>
-</div>
+    <script>
 
-{% if filtre %}
-<h3>Liste des transactions - {{ filtre|title }}</h3>
-<form method="get" class="search-form">
-    <input type="hidden" name="filtre" value="{{ filtre }}">
-    <input type="text" name="recherche" id="filtreRecherche" placeholder="🔍 Rechercher par nom, référence..." value="{{ recherche }}">
-    <button type="submit">Rechercher</button>
-</form>
+function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 
-<table>
-    <tr>
-        <th>Compte débité</th>
-        <th>Solde initial débité</th>
-        <th>Solde final débité</th>
-        <th>Compte crédité</th>
-        <th>Solde initial crédité</th>
-        <th>Solde final crédité</th>
-        <th>Montant</th>
-        <th>Référence</th>
-        <th>Statut</th>
-        <th>Date</th>
-        <th>Action</th>
-    </tr>
-    <tbody id="liste-transactions">
-        {% for transaction in page_obj %}
-        <tr>
-            <!-- Compte débité -->
+    const csrftoken = getCookie('csrftoken');
+
+    // Exemple de requête AJAX avec le jeton CSRF
+    async function fetchTransactions() {
+        try {
+            const response = await fetch('/api/transactions/', {
+                method: 'GET', // ou 'POST' selon le besoin
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                // body: JSON.stringify({/* vos données ici */}) // nécessaire pour POST
+            });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const transactions = await response.json();
+            return transactions;
+        } catch (error) {
+            console.error('There has been a problem with your fetch operation:', error);
+            showNotification("Échec de la récupération des données", "error");
+            return [];
+        }
+    }
+
+       let realTransactions = [];
+let currentFilter = 'toutes';
+let currentPage = 1;
+let filteredTransactions = [];
+const itemsPerPage = 10;
+
+async function fetchTransactions() {
+    try {
+        const response = await fetch('/api/transactions/');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const transactions = await response.json();
+        return transactions;
+    } catch (error) {
+        console.error('There has been a problem with your fetch operation:', error);
+        showNotification("Échec de la récupération des données", "error");
+        return [];
+    }
+}
+
+async function initializeDashboard() {
+    const transactions = await fetchTransactions();
+    if (transactions.length > 0) {
+        realTransactions = transactions;
+        filteredTransactions = [...realTransactions];
+        updateStats();
+        updateDisplay();
+    }
+}
+
+function updateStats() {
+    const total = realTransactions.length;
+    const transmises = realTransactions.filter(t => t.statut === 'transmise').length;
+    const echouees = realTransactions.filter(t => t.statut === 'echec').length;
+    const attente = realTransactions.filter(t => t.statut === 'attente').length;
+
+    document.getElementById('totalTransactions').textContent = total;
+    document.getElementById('totalTransmises').textContent = transmises;
+    document.getElementById('totalEchouees').textContent = echouees;
+    document.getElementById('totalAttente').textContent = attente;
+}
+
+function filterTransactions(filter) {
+    currentFilter = filter;
+    currentPage = 1;
+
+    document.querySelectorAll('.filter-buttons button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`btn-${filter}`).classList.add('active');
+
+    switch(filter) {
+        case 'transmises':
+            filteredTransactions = realTransactions.filter(t => t.statut === 'transmise');
+            break;
+        case 'echouees':
+            filteredTransactions = realTransactions.filter(t => t.statut === 'echec');
+            break;
+        case 'attente':
+            filteredTransactions = realTransactions.filter(t => t.statut === 'attente');
+            break;
+        case 'toutes':
+        default:
+            filteredTransactions = [...realTransactions];
+    }
+
+    updateDisplay();
+    showNotification(`Filtre "${filter}" appliqué - ${filteredTransactions.length} transaction(s)`, 'success');
+}
+
+function searchTransactions() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    currentPage = 1;
+
+    if (searchTerm.trim() === '') {
+        filterTransactions(currentFilter);
+        return;
+    }
+
+    filteredTransactions = realTransactions.filter(transaction =>
+        transaction.compteDebite.toLowerCase().includes(searchTerm) ||
+        transaction.compteCredite.toLowerCase().includes(searchTerm) ||
+        transaction.reference.toLowerCase().includes(searchTerm) ||
+        (transaction.motif && transaction.motif.toLowerCase().includes(searchTerm))
+    );
+
+    updateDisplay();
+    showNotification(`${filteredTransactions.length} résultat(s) trouvé(s)`, 'success');
+}
+
+function updateDisplay() {
+    const tbody = document.getElementById('transactionTableBody');
+    tbody.innerHTML = '';
+
+    if (filteredTransactions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align: center;">Aucune transaction trouvée.</td></tr>';
+        return;
+    }
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+    pageTransactions.forEach(transaction => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${transaction.compteDebite}</td>
+            <td>${transaction.soldeInitialDebite.toLocaleString()} FCFA</td>
+            <td>${transaction.soldeFinalDebite.toLocaleString()} FCFA</td>
+            <td>${transaction.compteCredite}</td>
+            <td>${transaction.soldeInitialCredite.toLocaleString()} FCFA</td>
+            <td>${transaction.soldeFinalCredite.toLocaleString()} FCFA</td>
+            <td><strong>${transaction.montant.toLocaleString()} FCFA</strong></td>
+            <td>${transaction.reference}</td>
+            <td><span class="status-badge status-${transaction.statut}">${getStatusText(transaction.statut)}</span></td>
+            <td>${formatDate(transaction.date)}</td>
             <td>
-                {% if transaction.compte_debite.titulaire %}
-                    {{ transaction.compte_debite.titulaire.get_full_name }}
-                {% else %}
-                    {{ transaction.compte_debite.operateur }}
-                {% endif %}
+                <button class="btn btn-info" onclick="voirRecu(${transaction.id})">Voir</button>
+                ${transaction.statut === 'echec' || transaction.statut === 'attente' ?
+                    `<button class="btn btn-warning" onclick="retransmettre(${transaction.id})">Retransmettre</button>` : ''
+                }
             </td>
+        `;
+        tbody.appendChild(row);
+    });
 
-            <!-- Solde initial débité -->
-            <td>
-                {% if transaction.compte_debite %}
-                    {{ transaction.compte_debite.solde|add:transaction.montant|floatformat:0 }}
-                {% else %}-{% endif %}
-            </td>
+    updatePagination();
+}
 
-            <!-- Solde final débité -->
-            <td>
-                {{ transaction.compte_debite.solde|floatformat:0 }}
-            </td>
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+}
 
-            <!-- Compte crédité -->
-            <td>
-                {% if transaction.compte_credite.titulaire %}
-                    {{ transaction.compte_credite.titulaire.get_full_name }}
-                {% else %}
-                    {{ transaction.compte_credite.operateur }}
-                {% endif %}
-            </td>
+function getStatusText(status) {
+    switch(status) {
+        case 'transmise': return 'Transmise';
+        case 'echec': return 'Échec';
+        case 'attente': return 'En attente';
+        default: return status;
+    }
+}
 
-            <!-- Solde initial crédité -->
-            <td>
-                {% if transaction.compte_credite %}
-                    {{ transaction.compte_credite.solde|add:"-"|add:transaction.montant|floatformat:0 }}
-                {% else %}-{% endif %}
-            </td>
+function updatePagination() {
+    const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+    const pageInfo = document.getElementById('pageInfo');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
 
-            <!-- Solde final crédité -->
-            <td>
-                {{ transaction.compte_credite.solde|floatformat:0 }}
-            </td>
+    pageInfo.textContent = `Page ${currentPage} sur ${totalPages}`;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+}
 
-            <!-- Montant, Réf, Statut, Date -->
-            <td>{{ transaction.montant }}</td>
-            <td>{{ transaction.reference_paiement }}</td>
-            <td>{{ transaction.get_statut_display }}</td>
-            <td>{{ transaction.date_transaction|date:"d/m/Y H:i" }}</td>
+function changePage(direction) {
+    const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+    const newPage = currentPage + direction;
 
-            <!-- Action -->
-            <td>
-                    {% if transaction.statut == 'echec' or transaction.statut == 'attente' %}
-                    <form method="post" action="{% url 'retransmettre_transaction' transaction.id %}" style="display:inline;" onsubmit="return confirm('Voulez-vous vraiment retransmettre cette transaction ?');">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-warning">Retransmettre</button>
-                    </form>
-                {% else %}
-                    <a href="{% url 'recu_transaction' transaction.id %}" class="btn btn-info">Voir</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="11" style="text-align: center;">Aucune transaction trouvée.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        updateDisplay();
+    }
+}
+
+async function retransmettre(id) {
+    const transaction = realTransactions.find(t => t.id === id);
+    if (!transaction) {
+        showNotification('Transaction introuvable', 'error');
+        return;
+    }
+
+    if (!confirm(`Voulez-vous vraiment retransmettre la transaction ${transaction.reference} ?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/retransmettre/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            showNotification('Transaction retransmise avec succès', 'success');
+            // Optionnel : rafraîchir la liste pour voir le statut mis à jour
+            await initializeDashboard();
+        } else {
+            const data = await response.json();
+            showNotification(`Erreur : ${data.message}`, 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('Erreur réseau lors de la retransmission', 'error');
+    }
+}
 
 
-<div class="pagination">
-    {% if page_obj.has_previous %}
-        <a href="?filtre={{ filtre }}&page={{ page_obj.previous_page_number }}">⬅ Précédent</a>
-    {% endif %}
+function voirRecu(id) {
+    const transaction = realTransactions.find(t => t.id === id);
+    if (transaction) {
+        generateReceipt(transaction);
+        document.getElementById('receiptModal').style.display = 'block';
+    }
+}
 
-    <span>Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}</span>
+function generateReceipt(transaction) {
+    const receiptContent = document.getElementById('receiptContent');
 
-    {% if page_obj.has_next %}
-        <a href="?filtre={{ filtre }}&page={{ page_obj.next_page_number }}">Suivant ➡</a>
-    {% endif %}
-</div>
-{% endif %}
+    receiptContent.innerHTML = `
+        <div class="receipt-header">
+            <h3>REÇU DE TRANSACTION</h3>
+            <p>Système de paiement électronique</p>
+            <p>Date d'émission: ${formatDate(new Date())}</p>
+        </div>
 
+        <div class="receipt-details">
+            <div class="receipt-row">
+                <span class="receipt-label">Référence:</span>
+                <span class="receipt-value">${transaction.reference}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Date de transaction:</span>
+                <span class="receipt-value">${formatDate(transaction.date)}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Statut:</span>
+                <span class="receipt-value">${getStatusText(transaction.statut)}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Motif:</span>
+                <span class="receipt-value">${transaction.motif || 'Non spécifié'}</span>
+            </div>
+        </div>
+        <div class="receipt-amount">
+            <h4 class="amount">${transaction.montant.toLocaleString()} FCFA</h4>
+            <p>Montant transféré</p>
+        </div>
+        <div class="receipt-details">
+            <div class="receipt-row">
+                <span class="receipt-label">De:</span>
+                <span class="receipt-value">${transaction.compteDebite}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Solde initial:</span>
+                <span class="receipt-value">${transaction.soldeInitialDebite.toLocaleString()} FCFA</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Solde final:</span>
+                <span class="receipt-value">${transaction.soldeFinalDebite.toLocaleString()} FCFA</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Vers:</span>
+                <span class="receipt-value">${transaction.compteCredite}</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Solde initial:</span>
+                <span class="receipt-value">${transaction.soldeInitialCredite.toLocaleString()} FCFA</span>
+            </div>
+            <div class="receipt-row">
+                <span class="receipt-label">Solde final:</span>
+                <span class="receipt-value">${transaction.soldeFinalCredite.toLocaleString()} FCFA</span>
+            </div>
+            ${transaction.frais > 0 ? `
+            <div class="receipt-row">
+                <span class="receipt-label">Frais de transaction:</span>
+                <span class="receipt-value">${transaction.frais.toLocaleString()} FCFA</span>
+            </div>` : ''}
+        </div>
+        <div class="receipt-footer">
+            <p><em>Ce reçu certifie l'exécution de la transaction ci-dessus.</em></p>
+            <button onclick="imprimerRecu()">🖨️ Imprimer</button>
+            <button onclick="telechargerRecu()">📱 Télécharger</button>
+        </div>
+    `;
+}
+
+function closeModal() {
+    document.getElementById('receiptModal').style.display = 'none';
+}
+
+function imprimerRecu() {
+    const receiptContent = document.getElementById('receiptContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Reçu de transaction</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .receipt { max-width: 600px; margin: 0 auto; }
+                .receipt-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+                .receipt-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                .receipt-label { font-weight: bold; }
+                .receipt-amount { background: #f0f0f0; padding: 15px; text-align: center; margin: 20px 0; border-radius: 5px; }
+                .receipt-footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #333; }
+                button { display: none; }
+                @media print { button { display: none !important; } }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">${receiptContent}</div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function telechargerRecu() {
+    const transaction = realTransactions.find(t => t.id === currentReceiptTransactionId);
+    if (transaction) {
+        const receiptData = `
+REÇU DE TRANSACTION
+===================
+Référence: ${transaction.reference}
+Date: ${formatDate(transaction.date)}
+Statut: ${getStatusText(transaction.statut)}
+Motif: ${transaction.motif || 'Non spécifié'}
+MONTANT: ${transaction.montant.toLocaleString()} FCFA
+De: ${transaction.compteDebite}
+Solde initial: ${transaction.soldeInitialDebite.toLocaleString()} FCFA
+Solde final: ${transaction.soldeFinalDebite.toLocaleString()} FCFA
+Vers: ${transaction.compteCredite}
+Solde initial: ${transaction.soldeInitialCredite.toLocaleString()} FCFA
+Solde final: ${transaction.soldeFinalCredite.toLocaleString()} FCFA
+${transaction.frais > 0 ? `Frais: ${transaction.frais.toLocaleString()} FCFA` : ''}
+Ce reçu certifie l'exécution de la transaction ci-dessus.
+Généré le ${formatDate(new Date())}
+        `;
+
+        const blob = new Blob([receiptData], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `recu_${transaction.reference}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        showNotification('Reçu téléchargé avec succès', 'success');
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+    </script>
+</body>
 {% endblock %}
-

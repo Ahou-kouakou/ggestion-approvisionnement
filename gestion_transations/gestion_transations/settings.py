@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'application',
+     #'application.apps.ApplicationConfig',
 ]
 
 MIDDLEWARE = [
@@ -138,3 +139,15 @@ AUTH_USER_MODEL = 'application.CustomUser'
 
 import os
 DOSSIER_FICHIERS_CBS = os.path.join(BASE_DIR, 'cbs_files')
+
+# LOGIN_REDIRECT_URL = '/redirect/'  # URL qui appelle ta vue redirect_after_login
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'               # SMTP de Gmail
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'nadegekouakou150@gmail.com'     # ton email
+EMAIL_HOST_PASSWORD = 'bfhv whop gzvy xlfo'  # mot de passe d’application si 2FA activé
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+

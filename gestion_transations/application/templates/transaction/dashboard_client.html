@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Mon Espace Client{% endblock %}
+
+{% block content %}
+<h2>Bienvenue {{ request.user.get_full_name }}</h2>
+
+{% if compte %}
+<p>Numéro de compte : <strong>{{ compte.numero_compte }}</strong></p>
+<p>Solde actuel : <strong>{{ compte.solde }} FCFA</strong></p>
+
+<table border="1" style="width:100%; margin-top:20px;">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Référence</th>
+            <th>Montant crédité</th>
+            <th>Statut</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for t in transactions %}
+        <tr>
+            <td>{{ t.date_transaction|date:"d/m/Y H:i" }}</td>
+            <td>{{ t.reference_paiement }}</td>
+            <td>{{ t.montant }} FCFA</td>
+            <td>{{ t.get_statut_display }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align:center;">Aucune transaction trouvée.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+<p>Aucun compte bancaire associé à votre profil.</p>
+{% endif %}
+{% endblock %}

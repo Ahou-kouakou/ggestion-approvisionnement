@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Bienvenue {{ request.user.username }}</h2>
+
+{% if compte %}
+    <h3>💰 Solde actuel : {{ compte.solde }} FCFA</h3>
+
+    <h3>📄 Historique des transactions :</h3>
+    <table border="1">
+        <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Montant</th>
+            <th>Description</th>
+        </tr>
+        {% for tx in transactions %}
+        <tr>
+            <td>{{ tx.date|date:"d/m/Y H:i" }}</td>
+            <td>{{ tx.type_transaction }}</td>
+            <td>{{ tx.montant }}</td>
+            <td>{{ tx.description }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Aucune transaction</td></tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>Aucun compte trouvé pour cet utilisateur.</p>
+{% endif %}
+
+{% endblock %}

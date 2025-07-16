@@ -1,66 +1,175 @@
-{% extends 'base.html' %}
+<!-- {% extends 'base.html' %}
 {% block title %}Reçu de Transaction{% endblock %}
 
-{% block content %}
+{% block content %} -->
 <style>
-    .recu-container {
-        max-width: 600px;
-        margin: 40px auto;
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        font-family: 'Segoe UI', sans-serif;
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    h2 {
+    .receipt-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .receipt-header {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #3498db;
+    }
+    .receipt-header h2 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .receipt-detail {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    .detail-label {
+        font-weight: 600;
+        color: #7f8c8d;
+    }
+    .detail-value {
+        font-weight: 500;
+        text-align: right;
+    }
+    .amount {
+        font-size: 1.5rem;
+        font-weight: 700;
         color: #2c3e50;
     }
-    .info {
-        margin-bottom: 10px;
-        font-size: 16px;
+    .status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
     }
-    .btn-print {
+    .status-success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .status-failed {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .print-btn {
         display: block;
         width: 100%;
+        padding: 0.75rem;
+        margin-top: 2rem;
         background-color: #3498db;
         color: white;
-        padding: 10px;
-        margin-top: 20px;
-        text-align: center;
         border: none;
         border-radius: 5px;
-        font-size: 16px;
+        font-size: 1rem;
         cursor: pointer;
+        transition: background-color 0.3s;
     }
-    .btn-print:hover {
+    .print-btn:hover {
         background-color: #2980b9;
     }
-
     @media print {
-        .btn-print {
+        .print-btn {
             display: none;
         }
-        header, nav {
-            display: none;
+        body {
+            background: none;
+        }
+        .receipt-container {
+            box-shadow: none;
+            border: 1px solid #ddd;
         }
     }
 </style>
 
-<div class="recu-container">
-    <h2>Reçu de Transaction</h2>
-    <div class="info"><strong>Référence :</strong> {{ transaction.reference_paiement }}</div>
-    <div class="info"><strong>Montant :</strong> {{ transaction.montant }} FCFA</div>
-    <div class="info"><strong>Date :</strong> {{ transaction.date_transaction|date:"d/m/Y H:i" }}</div>
-    <div class="info"><strong>Compte débité :</strong> 
-        {{ transaction.compte_debite.titulaire.get_full_name }}
+<div class="receipt-container">
+    <div class="receipt-header">
+        <h2>REÇU DE TRANSACTION</h2>
+        <p>Transaction sécurisée</p>
     </div>
-    <div class="info"><strong>Compte crédité :</strong> 
-        {{ transaction.compte_credite.titulaire.get_full_name }}
-    </div>
-    <div class="info"><strong>Statut :</strong> {{ transaction.get_statut_display }}</div>
 
-    <button class="btn-print" onclick="window.print()">🖨️ Imprimer le reçu</button>
+    <div class="receipt-body">
+        <div class="receipt-detail">
+            <span class="detail-label">Référence :</span>
+            <span class="detail-value">{{ transaction.reference_paiement }}</span>
+        </div>
+        
+        <div class="receipt-detail">
+            <span class="detail-label">Date :</span>
+            <span class="detail-value">{{ transaction.date_transaction|date:"d/m/Y H:i" }}</span>
+        </div>
+        
+        <div class="receipt-detail">
+            <span class="detail-label">Montant :</span>
+            <span class="detail-value amount">{{ transaction.montant|floatformat:0 }} FCFA</span>
+        </div>
+        
+        <div class="receipt-detail">
+            <span class="detail-label">Émetteur :</span>
+            <span class="detail-value">{{ transaction.compte_debite.titulaire.get_full_name }}</span>
+        </div>
+        
+        <div class="receipt-detail">
+            <span class="detail-label">Bénéficiaire :</span>
+            <span class="detail-value">{{ transaction.compte_credite.titulaire.get_full_name }}</span>
+        </div>
+        
+        <div class="receipt-detail">
+            <span class="detail-label">Statut :</span>
+            <span class="detail-value">
+                <span class="status 
+                    {% if transaction.statut == 'transmise' %}status-success{% endif %}
+                    {% if transaction.statut == 'attente' %}status-pending{% endif %}
+                    {% if transaction.statut == 'echec' %}status-failed{% endif %}">
+                    {{ transaction.get_statut_display|upper }}
+                </span>
+            </span>
+        </div>
+    </div>
+
+    <button class="print-btn" onclick="printReceipt()">
+        IMPRIMER LE REÇU
+    </button>
 </div>
-{% endblock %}
+
+<script>
+    function printReceipt() {
+        // Masquer temporairement le bouton avant impression
+        const printBtn = document.querySelector('.print-btn');
+        printBtn.style.display = 'none';
+        
+        // Lancer l'impression
+        window.print();
+        
+        // Réafficher le bouton après un court délai
+        setTimeout(() => {
+            printBtn.style.display = 'block';
+        }, 500);
+    }
+
+    // Formatage du montant au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountElement = document.querySelector('.amount');
+        if (amountElement) {
+            const amountText = amountElement.textContent;
+            const amount = parseFloat(amountText.replace(/[^\d.]/g, ''));
+            if (!isNaN(amount)) {
+                // Formatage avec séparateurs de milliers
+                amountElement.textContent = amount.toLocaleString('fr-FR') + ' FCFA';
+            }
+        }
+    });
+</script>
+<!-- {% endblock %} -->

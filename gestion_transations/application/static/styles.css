@@ -1,78 +1,103 @@
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
+/* Container principal */
+.container {
+    display: flex;
+    min-height: 100vh;
 }
 
-header {
+/* Sidebar (navbar à gauche) */
+.sidebar {
+    width: 250px;
     background-color: #2c3e50;
     color: white;
-    text-align: center;
-    padding: 20px 0;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
 }
 
-nav {
-    background-color: #34495e;
-    padding: 10px;
+/* Message de bienvenue */
+.user-welcome {
     text-align: center;
-}
-
-nav a {
-    color: white;
-    margin: 0 15px;
-    text-decoration: none;
+    margin-bottom: 30px;
+    font-size: 1.1em;
     font-weight: bold;
+    padding: 15px;
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 8px;
 }
 
-nav a:hover {
-    text-decoration: underline;
+/* Liens de navigation */
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-main {
-    padding: 30px;
-}
-
-.form-container {
-    max-width: 500px;
-    margin: auto;
-    background-color: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-label {
+.nav-links a {
     display: block;
-    margin-bottom: 5px;
-}
-
-input, select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.btn {
-    background-color: #3498db;
+    padding: 12px 15px;
     color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.nav-links a:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+/* Formulaire de déconnexion */
+.logout-form {
+    margin-top: 20px;
+}
+
+.logout-form button {
     width: 100%;
+    padding: 12px 15px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
 }
 
-.btn:hover {
-    background-color: #2980b9;
+.logout-form button:hover {
+    background-color: #c0392b;
 }
 
-.login-link {
-    text-align: center;
-    margin-top: 15px;
+/* Contenu principal */
+.main-content {
+    flex: 1;
+    margin-left: 250px;
+    padding: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+    
+    .main-content {
+        margin-left: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .container {
+        flex-direction: column;
+    }
 }

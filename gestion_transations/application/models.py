@@ -17,16 +17,19 @@ class CustomUser(AbstractUser):
     validators=[RegexValidator(r'^\d{10}$', 'Entrez un numéro de téléphone valide à 10 chiffres.')],
     verbose_name="Téléphone"
 )
-
+#/////////
     TYPE_CHOICES = (
-        ('client', 'Client'),
-        ('agent', 'Agent'),
-        ('admin', 'Administrateur'),
-    )
-    user_type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='client', verbose_name="Type d'utilisateur")
+    ('client_bancaire', 'Client bancaire'),
+    ('client_operateur', 'Client opérateur'),
+    ('agent', 'Agent'),
+    ('admin', 'Administrateur'),
+)
+
+    user_type = models.CharField(max_length=16, choices=TYPE_CHOICES, default='client', verbose_name="Type d'utilisateur")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'telephone', 'user_type']
+    
 
     def __str__(self):
         return f"{self.email} ({self.user_type})"
@@ -40,6 +43,14 @@ class Operateur(models.Model):
     nom      = models.CharField(max_length=50, unique=True)
     type     = models.CharField(max_length=50)            # « mobile money », « telco », …
     adresse  = models.CharField(max_length=200)
+    #//////
+    utilisateur = models.OneToOneField(
+    settings.AUTH_USER_MODEL,
+    on_delete=models.CASCADE,
+    null=True, blank=True,
+    related_name='operateur'
+)
+
 
     def __str__(self):
         return self.nom
@@ -86,9 +97,11 @@ class Compte(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=(
-                    models.Q(type='banque', titulaire__isnull=False, operateur__isnull=True) |
-                    models.Q(type='operateur', operateur__isnull=False, titulaire__isnull=True)
+                    models.Q(type='banque', titulaire__isnull=False) |
+                    models.Q(type='operateur', titulaire__isnull=False) |
+                    models.Q(type='operateur', operateur__isnull=False)
                 ),
+
                 name="compte_titulaire_ou_operateur"
             )
         ]
@@ -127,26 +140,33 @@ class Transaction(models.Model):
         related_name='transactions_validées'
     )
 
-    nom_fichier        = models.CharField(max_length=20, blank=True)
+    nom_fichier = models.CharField(max_length=20, blank=True)
 
+    @property
+    def solde_initial_credite(self):
+        if self.compte_credite and self.montant:
+            return self.compte_credite.solde - self.montant
+        return None
     
 
-def save(self, *args, **kwargs):
-    if not self.reference_paiement:
-        for _ in range(5):  # 5 tentatives maximum
-            ref = f"TRX-{uuid.uuid4().hex[:11].upper()}"
-            if not Transaction.objects.filter(reference_paiement=ref).exists():
-                self.reference_paiement = ref
-                break
-        else:
-            raise ValueError("Impossible de générer une référence de paiement unique.")
+    def save(self, *args, **kwargs):
+        if not self.reference_paiement:
+            for _ in range(5):  # 5 tentatives maximum
+                ref = f"TRX-{uuid.uuid4().hex[:11].upper()}"
+                if not Transaction.objects.filter(reference_paiement=ref).exists():
+                    self.reference_paiement = ref
+                    break
+            else:
+                raise ValueError("Impossible de générer une référence de paiement unique.")
+        
+        try:
+            super().save(*args, **kwargs)
+        except IntegrityError:
+            raise ValueError("Échec de l'enregistrement : référence de paiement déjà utilisée.")
+
+    notification_envoyee = models.BooleanField(default=False)
+
     
-    try:
-        super().save(*args, **kwargs)
-    except IntegrityError:
-        raise ValueError("Échec de l'enregistrement : référence de paiement déjà utilisée.")
-
-
     def __str__(self):
         return f"{self.reference_paiement} – {self.montant} ({self.get_statut_display()})"
 

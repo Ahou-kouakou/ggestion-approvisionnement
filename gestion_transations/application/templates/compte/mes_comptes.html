@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Mes comptes{% endblock %}
+{% block content %}
+<h2>Mes comptes</h2>
+
+{% if comptes %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Numéro</th>
+                <th>Type</th>
+                <th>Solde</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for compte in comptes %}
+            <tr>
+                <td>{{ compte.numero_compte }}</td>
+                <td>{{ compte.get_type_display }}</td>
+                <td>{{ compte.solde }} FCFA</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Aucun compte à afficher.</p>
+{% endif %}
+{% endblock %}
